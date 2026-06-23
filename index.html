@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>信用扩张场景全景图 · 明斯基脆弱度地形</title>
+<meta name="description" content="家庭·公司·银行·国家四层的三十个信用扩张场景，按抵押品／杠杆／反身性打分，定位其在对冲—投机—庞氏谱系上的坐标。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3EAD3; --paper2:#ECE0C3; --card:#FBF7EC; --card2:#FFFDF8;
+  --ink:#2E2925; --ink2:#5F5648; --soft:#8C8170; --line:rgba(46,41,37,.13); --line2:rgba(46,41,37,.07);
+  --teal:#3F7E6B; --coral:#BC4B33; --amber:#B07D2B; --blue:#3A6491;
+  --hedge:#5E8C61; --spec:#C8923D; --ponzi:#BC4B33;
+  --hedge-t:rgba(94,140,97,.13); --spec-t:rgba(200,146,61,.13); --ponzi-t:rgba(188,75,51,.12);
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"Noto Serif SC","Songti SC",serif; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:30px 22px 70px}
+
+/* masthead */
+.rule{width:62px;height:4px;background:var(--coral);border-radius:2px}
+h1{font-size:30px;font-weight:700;letter-spacing:1px;margin:18px 0 6px}
+.dek{font-size:15px;color:var(--ink2);max-width:62ch}
+.dek b{color:var(--ink);font-weight:600}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end;
+  margin:26px 0 18px;padding:18px 20px;background:var(--card);
+  border:1px solid var(--line);border-radius:14px}
+.ctl{display:flex;flex-direction:column;gap:7px}
+.ctl .lab{font-size:11.5px;letter-spacing:1.2px;color:var(--soft);text-transform:uppercase;font-family:var(--mono)}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card2)}
+.seg button{appearance:none;border:0;background:transparent;cursor:pointer;
+  font-family:inherit;font-size:13.5px;color:var(--ink2);padding:7px 13px;border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--card2)}
+.layers{display:flex;gap:8px;flex-wrap:wrap}
+.chip{appearance:none;border:1px solid var(--line);background:var(--card2);cursor:pointer;
+  font-family:inherit;font-size:13px;color:var(--ink2);padding:6px 13px;border-radius:999px;display:flex;align-items:center;gap:7px}
+.chip .d{width:9px;height:9px;border-radius:3px}
+.chip.off{opacity:.4}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink2);cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--coral);width:16px;height:16px}
+
+/* view switch */
+.viewswitch{margin-left:auto}
+
+/* plot */
+.stage{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 8px 30px rgba(46,41,37,.06);padding:14px 8px 6px;position:relative}
+.plot-scroll{overflow-x:auto}
+svg.plot{display:block;width:100%;min-width:720px;height:auto}
+.axis-t{font-family:var(--mono);font-size:11px;fill:var(--soft)}
+.band-l{font-weight:700;letter-spacing:1px}
+.col-l{font-size:15px;font-weight:700;fill:var(--ink)}
+.col-sub{font-family:var(--mono);font-size:10.5px;fill:var(--soft)}
+.node{cursor:pointer;transition:opacity .15s}
+.node circle{stroke:#2E2925;stroke-opacity:.55;stroke-width:1}
+.node text{font-size:11px;fill:var(--ink2);dominant-baseline:central}
+.node.sel circle{stroke:var(--ink);stroke-width:2.4;stroke-opacity:1}
+.node.dim{opacity:.18}
+.gridline{stroke:var(--line2);stroke-width:1}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;
+  font-size:12.5px;color:var(--ink2);padding:14px 14px 4px}
+.legend .it{display:flex;align-items:center;gap:8px}
+.legend .sw{width:13px;height:13px;border-radius:4px;border:1px solid rgba(46,41,37,.3)}
+.legend .ring{width:14px;height:14px;border-radius:50%;border:2px dashed var(--ink2)}
+.legend .count{font-family:var(--mono);color:var(--soft)}
+.size-key{display:flex;align-items:center;gap:6px}
+.size-key .c{border:1px solid var(--soft);border-radius:50%}
+
+/* detail */
+.detail{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0;overflow:hidden;min-height:88px}
+.detail .empty{padding:26px 24px;color:var(--soft);font-size:14px}
+.dt-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:20px 24px 14px;border-bottom:1px solid var(--line2)}
+.dt-name{font-size:21px;font-weight:700}
+.lchip{font-size:12px;font-family:var(--mono);padding:3px 10px;border-radius:999px;color:#fff}
+.kind{font-size:12px;color:var(--soft);font-family:var(--mono);margin-left:auto}
+.dt-body{display:grid;grid-template-columns:300px 1fr;gap:24px;padding:20px 24px 24px}
+@media(max-width:680px){.dt-body{grid-template-columns:1fr}}
+.scores .srow{display:flex;align-items:center;gap:12px;margin:0 0 13px}
+.scores .sl{width:78px;font-size:13px;color:var(--ink2)}
+.bar{flex:1;height:9px;background:var(--paper2);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+.sv{font-family:var(--mono);font-size:13px;width:30px;text-align:right;color:var(--ink)}
+.frag-box{margin-top:6px;padding-top:14px;border-top:1px dashed var(--line)}
+.frag-row{display:flex;align-items:baseline;gap:10px}
+.frag-num{font-family:var(--mono);font-size:30px;font-weight:700}
+.frag-band{font-size:13px;font-weight:700;padding:3px 11px;border-radius:999px;color:#fff}
+.frag-cap{font-family:var(--mono);font-size:11px;color:var(--soft);margin-top:6px}
+.note{font-size:15px;line-height:1.85;color:var(--ink)}
+.note .axes{font-family:var(--mono);font-size:12px;color:var(--soft);margin-top:14px}
+
+/* table */
+.tblwrap{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line2)}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.6px;color:var(--soft);text-transform:uppercase;cursor:pointer;white-space:nowrap}
+th .ar{opacity:.5}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tr.row{cursor:pointer}
+tr.row:hover{background:var(--card2)}
+.rank{font-family:var(--mono);color:var(--soft);width:34px}
+.bandtag{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:middle}
+.lname{color:var(--ink2);font-size:12.5px}
+
+.hidden{display:none}
+
+/* methodology */
+details.method{margin-top:24px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 20px}
+details.method summary{cursor:pointer;font-weight:600;padding:14px 0;font-size:15px;list-style:none}
+details.method summary::-webkit-details-marker{display:none}
+details.method summary::before{content:"▸ ";color:var(--coral)}
+details.method[open] summary::before{content:"▾ "}
+.method .mbody{font-size:14px;line-height:1.85;color:var(--ink2);padding:0 0 18px}
+.method code{font-family:var(--mono);background:var(--paper2);padding:1px 6px;border-radius:5px;font-size:13px;color:var(--ink)}
+.foot{margin-top:30px;font-size:12.5px;color:var(--soft);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="rule"></div>
+  <h1>信用扩张场景全景图</h1>
+  <p class="dek">家庭 · 公司 · 银行 · 国家四层，三十个典型场景。每个场景在 <b>抵押品强度 / 杠杆 / 反身性</b> 三轴上打分，合成一个脆弱度坐标，定位它在 <b>对冲 → 投机 → 庞氏</b> 谱系上的位置——越往上、越红，越接近庞氏那一端。点任意节点看运作机制。</p>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="lab">纵轴</span>
+      <div class="seg" id="ydim">
+        <button data-v="frag" class="on">脆弱度</button>
+        <button data-v="lv">杠杆</button>
+        <button data-v="rf">反身性</button>
+        <button data-v="ci">抵押品薄弱</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lab">节点大小</span>
+      <div class="seg" id="sdim">
+        <button data-v="lv" class="on">杠杆</button>
+        <button data-v="frag">脆弱度</button>
+        <button data-v="fix">一致</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lab">层</span>
+      <div class="layers" id="layers"></div>
+    </div>
+    <div class="ctl">
+      <span class="lab">标签</span>
+      <label class="toggle"><input type="checkbox" id="lblToggle" checked> 显示名称</label>
+    </div>
+    <div class="ctl viewswitch">
+      <span class="lab">视图</span>
+      <div class="seg" id="view">
+        <button data-v="plot" class="on">全景图</button>
+        <button data-v="table">排行榜</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage" id="plotView">
+    <div class="plot-scroll">
+      <svg class="plot" id="svg" viewBox="0 0 1040 720" preserveAspectRatio="xMidYMid meet" role="img" aria-label="信用扩张场景脆弱度散点图"></svg>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="stage tblwrap hidden" id="tableView" style="padding:8px 14px 14px">
+    <table id="tbl"><thead></thead><tbody></tbody></table>
+  </div>
+
+  <div class="detail" id="detail">
+    <div class="empty">点击图中任意节点（或榜单任意一行），查看该场景的三轴坐标、脆弱度与运作机制。</div>
+  </div>
+
+  <details class="method">
+    <summary>读图说明 &amp; 方法论边界</summary>
+    <div class="mbody">
+      <p><b>三根轴（均为 1–5 的序数判断，非精确测量）：</b>抵押品强度——抵押物是否优质、稳定、可变现，越高越安全；杠杆——自有权益相对于资产的薄厚，越高越险；反身性——抵押品价格与借贷能力之间的正反馈强度，越高越险。</p>
+      <p><b>脆弱度坐标</b>取三轴合成：<code>脆弱度 = (杠杆 + 反身性 + (6 − 抵押品强度)) / 3</code>，范围 1–5。据此划带：<code>&gt; 3.5</code> 接近庞氏、<code>2.5–3.5</code> 投机、<code>&lt; 2.5</code> 对冲。</p>
+      <p><b>重要边界：</b>这三轴刻画的是<b>结构脆弱度</b>，是明斯基谱系的一个代理，而非其定义。明斯基的真正分野在于<b>经营/收入现金流能否覆盖本息</b>——对冲融资能同时覆盖本息，投机融资只够付息、本金靠续作，庞氏融资连利息都不够、只能靠借新或资产升值续命。因此某些场景（如信用卡循环、以贷养贷）的现金流自偿性比其三轴坐标显示的更接近庞氏；坐标只是入口，不是终判。</p>
+      <p><b>空心菱形节点</b>是「机制 · 政策」类（如派生存款、央行工具、总量调控），它们是信用机器的结构或调控阀门，<b>不是借款人的杠杆头寸</b>，其纵轴位置只表示该机制内含的顺周期/扩张属性，不应与借款人脆弱度直接比较。所有打分均为示意性判断，供结构比较与讨论，不构成任何投资或财务建议。</p>
+    </div>
+  </details>
+
+  <div class="foot">信用扩张场景全景图 · 一条铁律贯穿四层：我的负债 = 你的资产。脆弱与稳健的尺子，是现金流能否自偿。</div>
+</div>
+
+<script>
+const DATA = [
+  // 家庭
+  {L:"家庭",n:"按揭购房",s:"按揭",c:4,lv:4,rf:4,k:"p",note:"首付作权益、房贷作负债、房子作资产，一笔交易使资产负债表两端同时撑大；偿付靠家庭收入，最大风险是房价（抵押品）与借贷能力之间的反身循环。"},
+  {L:"家庭",n:"房产净值再融资 / 经营贷置换",s:"净值贷",c:4,lv:4.5,rf:5,k:"p",note:"把房子升值出来的净值再抵押借出，或用低息经营贷置换房贷套利；直接变现「抵押品升值→可借更多」的反身链，并叠加利率与短期续贷风险。"},
+  {L:"家庭",n:"车贷",s:"车贷",c:2,lv:3,rf:1.5,k:"p",note:"结构同房贷，但抵押品是快速折旧的车，常出现贷款余额高于残值的资不抵债；零利率分期实为厂商把利息计入车价补贴促销。"},
+  {L:"家庭",n:"消费贷 / 信用卡循环（含先买后付）",s:"消费贷",c:1,lv:3.5,rf:1.5,k:"p",note:"不形成资产，纯把未来收入提前消费；信用卡只还最低额则按日利滚利，是家庭最贵的信用，循环滚动时现金流自偿性极差，实质更接近庞氏。"},
+  {L:"家庭",n:"证券杠杆（融资融券 / 配资）",s:"证券杠杆",c:2.5,lv:5,rf:5,k:"p",note:"用保证金撬动数倍市值，放大收益与回撤；跌破维持担保比例即追保或强平，形成「下跌→平仓→再跌」的快速螺旋。"},
+  {L:"家庭",n:"教育 / 人力资本贷款",s:"学贷",c:1,lv:2.5,rf:1,k:"p",note:"借款投向无形的人力资本，资产难以在表上计量，偿付完全依赖毕业后收入的实现，预期落空即失去自偿来源。"},
+  {L:"家庭",n:"民间借贷 / 以贷养贷",s:"以贷养贷",c:1,lv:4.5,rf:2,k:"p",note:"正规体系之外的债权债务扩张；以贷养贷用新债偿还旧债本息、自身不产生偿债现金流，是家庭版庞氏融资，链断即崩。"},
+  // 公司
+  {L:"公司",n:"银行信贷（流贷 / 项目贷）",s:"银行信贷",c:3.5,lv:3,rf:2.5,k:"p",note:"流贷垫付存货应收、项目贷投资扩产；核心是财务杠杆——资产回报高于借债成本时放大 ROE，反之放大亏损。"},
+  {L:"公司",n:"债券发行（含可转债）",s:"债券",c:2.5,lv:3.5,rf:2.5,k:"p",note:"绕开银行直接向资本市场借钱，常用于扩张或借新还旧；可转债平时是债、股价达标转股，是低息融资与期权的混合品种。"},
+  {L:"公司",n:"商业信用 / 应付账款",s:"应付账款",c:1.5,lv:2.5,rf:2,k:"p",note:"企业间赊账形成无息负债，无偿占用上下游资金；核心企业用强势地位拉长账期把融资压力转嫁中小供应商，链条具传染性。"},
+  {L:"公司",n:"供应链金融 / 票据贴现",s:"票据",c:3,lv:3,rf:3,k:"p",note:"围绕应收与票据，开承兑汇票支付、再贴现提前拿现金；票据可背书流转近似准货币，贴现把未来债权变现，易滋生空转套利。"},
+  {L:"公司",n:"融资租赁（直租 / 售后回租）",s:"融资租赁",c:3,lv:3,rf:2,k:"p",note:"直租以分期租金取得设备使用权，售后回租把自有设备卖出再租回套现；以「使用权」替代「所有权」完成设备融资，亦用于出表盘活资产。"},
+  {L:"公司",n:"杠杆收购（LBO）",s:"LBO",c:3,lv:5,rf:3.5,k:"p",note:"极薄自有资金＋大量举债收购，用目标自身资产与现金流抵押偿债，ROE 被极度放大，对目标现金流稳定性要求极高，典型玩家是 PE。"},
+  {L:"公司",n:"股权质押",s:"股权质押",c:2.5,lv:4,rf:5,k:"p",note:"大股东质押股票换现金；反身性最凶——股价跌→质押物缩水→触平仓线→被迫卖出→股价再跌，A 股曾多次引发连锁平仓。"},
+  {L:"公司",n:"房地产高周转预售",s:"高周转",c:3,lv:5,rf:5,k:"p",note:"拿地用开发贷启动、未建成即预售，购房者预付款＋按揭成为近乎无息的杠杆资金，回款再拿地循环；高度依赖销售回款不断流（曾以三道红线约束）。"},
+  // 银行
+  {L:"银行",n:"贷款创造存款 / 派生存款",s:"派生存款",c:3,lv:3.5,rf:3,k:"m",note:"放贷时同时记资产端债权与负债端存款，那笔存款即凭空创造的新货币；一笔基础货币层层派生，上限约为基础货币÷准备金率（货币乘数）。"},
+  {L:"银行",n:"票据贴现 / 转贴现",s:"贴现",c:3,lv:3.5,rf:3,k:"p",note:"银行买入未到期票据垫付现金即创造信用，再相互转贴现、向央行再贴现，把这笔信用在金融体系内传递放大。"},
+  {L:"银行",n:"同业业务 / 同业存单",s:"同业",c:2.5,lv:4,rf:3.5,k:"p",note:"银行间拆借、发同业存单、买卖同业理财，在存贷之外另辟扩张渠道；助长资金空转，常用于规避信贷额度与资本约束的监管套利。"},
+  {L:"银行",n:"影子银行（理财—通道—非标）",s:"影子银行",c:2,lv:4.5,rf:4,k:"p",note:"理财募资经信托券商资管通道投向非标债权，把信贷搬到表外、绕开资本充足率与额度约束，是中国式信用扩张里最庞大也最隐蔽的一块。"},
+  {L:"银行",n:"资产证券化（ABS / MBS）",s:"ABS",c:2.5,lv:4.5,rf:4.5,k:"p",note:"把贷款打包卖给 SPV、以其现金流为支撑发证券；「发起—分销」让贷款出表腾出资本与额度去放新贷，正是 2008 次贷危机的传导链。"},
+  {L:"银行",n:"资本补充工具",s:"资本补充",c:3.5,lv:3,rf:2.5,k:"p",note:"永续债、二级资本债、定增等补充资本，加厚风险缓冲；资本垫越厚可承载的风险资产越多——本质是为下一轮信用扩张腾出空间。"},
+  {L:"银行",n:"央行工具（降准降息 / MLF / PSL / QE）",s:"央行工具",c:4,lv:2.5,rf:2,k:"m",note:"通过降准降息、再贷款再贴现、MLF / PSL 乃至 QE 投放基础货币，拧松三道闸门；不直接放贷，却决定整个体系能创造多少信用、转速多快。"},
+  // 国家
+  {L:"国家",n:"中央财政赤字 / 国债",s:"国债",c:4.5,lv:3,rf:2,k:"p",note:"支出大于收入靠发国债弥补；国债是政府负债、同时是银行居民海外的资产，把未来征税能力提前动用，背后有主权信用兜底。"},
+  {L:"国家",n:"地方政府专项债",s:"专项债",c:3.5,lv:3.5,rf:2.5,k:"p",note:"为特定项目（基建、土储等）融资、以项目未来收益偿债，属计入政府账面的显性地方债，是积极财政的重要抓手。"},
+  {L:"国家",n:"地方融资平台（LGFV）/ 隐性债务",s:"LGFV",c:2.5,lv:4.5,rf:3.5,k:"p",note:"通过城投平台举债搞基建，资金来自城投债、银行贷款、非标，却不计入政府表，靠土地与政府信用兜底，是地方信用里最需警惕的灰色地带。"},
+  {L:"国家",n:"土地财政（抵押品轴心）",s:"土地财政",c:3,lv:4,rf:5,k:"p",note:"出让土地获取收入，而土地是整座信用大厦的核心抵押品，把居民—开发商—政府—基建四方咬合，地价是牵一发动全身的总枢纽。"},
+  {L:"国家",n:"央行扩表 / 基础货币投放",s:"基础货币",c:4,lv:3,rf:2.5,k:"m",note:"早年靠外汇占款被动投放人民币，后转为以 MLF / PSL 等抵押方式主动供给基础货币（PSL 曾大规模支持棚改货币化）。"},
+  {L:"国家",n:"财政赤字货币化 / QE",s:"赤字货币化",c:3.5,lv:4,rf:3.5,k:"m",note:"央行直接或间接为赤字融资、购买主权债，是信用扩张的终极形态；中国法律限制一级市场直购国债故多为间接，是 MMT 争论的焦点。"},
+  {L:"国家",n:"对外信用（外债 / 外储 / 美元体系）",s:"对外信用",c:3,lv:3.5,rf:4,k:"p",note:"通过对外借债或持有对外净资产、随国际资本流动扩张收缩；美元体系下离岸美元派生构成全球性信用层，把本国周期嵌入全球潮汐。"},
+  {L:"国家",n:"总量调控（社融 / M2 / 窗口指导）",s:"总量调控",c:4.5,lv:2,rf:2,k:"m",note:"用社融与 M2 增速目标调控全社会信用总闸门，辅以宏观审慎、信贷额度与窗口指导，以宏观杠杆率为标尺在去/稳杠杆之间切换。"},
+];
+
+const LAYERS=["家庭","公司","银行","国家"];
+const LCOLOR={"家庭":"#3F7E6B","公司":"#3A6491","银行":"#9A6A2F","国家":"#7A4A55"};
+const frag=d=> (d.lv + d.rf + (6 - d.c))/3;
+const band=f=> f>3.5?"ponzi": f>=2.5?"spec":"hedge";
+const BANDCOLOR={hedge:"#5E8C61",spec:"#C8923D",ponzi:"#BC4B33"};
+const BANDNAME={hedge:"对冲",spec:"投机",ponzi:"庞氏"};
+DATA.forEach(d=>{d.f=frag(d); d.b=band(d.f);});
+
+const state={ydim:"frag", sdim:"lv", labels:true, view:"plot",
+  active:new Set(LAYERS), sortKey:"f", sortDir:-1, sel:null};
+
+const SVGNS="http://www.w3.org/2000/svg";
+const svg=document.getElementById("svg");
+const W=1040,H=720, mL=92,mR=24,mT=34,mB=66;
+const plotW=W-mL-mR, plotH=H-mT-mB;
+
+// value accessor per y-dimension
+function yval(d){
+  if(state.ydim==="frag") return d.f;
+  if(state.ydim==="lv") return d.lv;
+  if(state.ydim==="rf") return d.rf;
+  if(state.ydim==="ci") return 6-d.c; // 抵押品薄弱
+}
+const Y_LABELS={frag:"脆弱度（越上越接近庞氏）",lv:"杠杆强度",rf:"反身性强度",ci:"抵押品薄弱程度"};
+function yToPx(v){ return mT + (5-v)/(5-1)*plotH; } // domain 1..5 -> bottom..top
+function sizeR(d){
+  let v = state.sdim==="lv"? d.lv : state.sdim==="frag"? d.f : 3;
+  if(state.sdim==="fix") return 9;
+  return 6 + (v-1)/(5-1)*10; // 6..16
+}
+
+function el(tag,attrs,parent){
+  const e=document.createElementNS(SVGNS,tag);
+  for(const k in attrs) e.setAttribute(k,attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+
+function textW(s){let w=0;for(const ch of s){w+= ch.charCodeAt(0)>255?11:7;}return w;}
+function rectsOverlap(a,b){return !(a.x2<=b.x1||a.x1>=b.x2||a.y2<=b.y1||a.y1>=b.y2);}
+
+function renderPlot(){
+  svg.innerHTML="";
+  const colN=LAYERS.length, colW=plotW/colN;
+  const labelBlockers=[];
+
+  // Minsky zone bands (only when ydim is fragility); else gridlines
+  if(state.ydim==="frag"){
+    const zones=[["ponzi",3.5,5],["spec",2.5,3.5],["hedge",1,2.5]];
+    zones.forEach(([b,lo,hi])=>{
+      const y1=yToPx(hi), y2=yToPx(lo);
+      el("rect",{x:mL,y:y1,width:plotW,height:y2-y1,
+        fill:BANDCOLOR[b],"fill-opacity":0.10},svg);
+      el("line",{x1:mL,y1:y2,x2:mL+plotW,y2:y2,stroke:"rgba(46,41,37,.10)","stroke-width":1},svg);
+      const t=el("text",{x:mL+8,y:(y1+y2)/2,fill:BANDCOLOR[b],"font-size":13,
+        "dominant-baseline":"central"},svg);
+      t.setAttribute("class","band-l"); t.textContent=BANDNAME[b]+"融资";
+      labelBlockers.push({x1:mL+6,y1:(y1+y2)/2-12,x2:mL+6+textW(BANDNAME[b]+"融资"),y2:(y1+y2)/2+12});
+    });
+  } else {
+    for(let v=1;v<=5;v++){
+      const y=yToPx(v);
+      el("line",{x1:mL,y1:y,x2:mL+plotW,y2:y,class:"gridline"},svg);
+      const t=el("text",{x:mL-10,y:y,"text-anchor":"end","dominant-baseline":"central",class:"axis-t"},svg);
+      t.textContent=v;
+    }
+  }
+  // y axis caption
+  const yc=el("text",{x:mL-10,y:mT-14,"text-anchor":"start",class:"axis-t"},svg);
+  yc.textContent=Y_LABELS[state.ydim];
+
+  // build nodes for all columns (beeswarm in x, true y)
+  const allNodes=[];
+  LAYERS.forEach((L,ci)=>{
+    const cx=mL+colW*ci+colW/2;
+    if(ci>0) el("line",{x1:mL+colW*ci,y1:mT,x2:mL+colW*ci,y2:mT+plotH,
+      stroke:"rgba(46,41,37,.07)","stroke-width":1},svg);
+    const on=state.active.has(L);
+    const cl=el("text",{x:cx,y:H-mB+30,"text-anchor":"middle",class:"col-l",
+      "fill-opacity":on?1:.3},svg); cl.textContent=L;
+    const cnt=DATA.filter(d=>d.L===L).length;
+    const cs=el("text",{x:cx,y:H-mB+48,"text-anchor":"middle",class:"col-sub",
+      "fill-opacity":on?1:.3},svg); cs.textContent=cnt+" 个场景";
+
+    let nodes=DATA.filter(d=>d.L===L).map(d=>({d, x:cx, y:yToPx(yval(d)), r:sizeR(d), on}));
+    nodes.sort((a,b)=>a.y-b.y);
+    const placedC=[];
+    const halfW=colW/2-12;
+    nodes.forEach(nd=>{
+      let found=false;
+      for(let step=0; step<=halfW; step+=3){
+        const dirs= step===0?[0]:[-1,1];
+        for(const dir of dirs){
+          const x=cx+dir*step;
+          if(x<cx-halfW || x>cx+halfW) continue;
+          if(placedC.every(p=>{const dx=p.x-x,dy=p.y-nd.y,rr=p.r+nd.r+2.5;return dx*dx+dy*dy>=rr*rr;})){
+            nd.x=x; placedC.push(nd); found=true; break;
+          }
+        }
+        if(found) break;
+      }
+      if(!found){ nd.x=cx; placedC.push(nd); }
+      allNodes.push(nd);
+    });
+  });
+
+  // draw node shapes
+  allNodes.forEach(nd=>{
+    const d=nd.d;
+    const g=el("g",{class:"node"+(state.sel===d?" sel":"")+(nd.on?"":" dim")},svg);
+    g.style.opacity = nd.on?1:0.16;
+    if(d.k==="m"){
+      const s=nd.r;
+      el("path",{d:`M${nd.x} ${nd.y-s} L${nd.x+s} ${nd.y} L${nd.x} ${nd.y+s} L${nd.x-s} ${nd.y} Z`,
+        fill:"var(--card2)",stroke:BANDCOLOR[d.b],"stroke-width":2},g);
+    } else {
+      el("circle",{cx:nd.x,cy:nd.y,r:nd.r,fill:BANDCOLOR[d.b],"fill-opacity":.82},g);
+    }
+    if(nd.on) g.addEventListener("click",()=>select(d));
+    nd.g=g;
+  });
+
+  // place labels with collision avoidance (active nodes only)
+  if(state.labels){
+    const nodeBoxes=allNodes.filter(n=>n.on).map(n=>({x1:n.x-n.r,y1:n.y-n.r,x2:n.x+n.r,y2:n.y+n.r}));
+    const placedL=labelBlockers.slice();
+    allNodes.filter(n=>n.on).sort((a,b)=>a.y-b.y).forEach(nd=>{
+      const w=textW(nd.d.s), h=14, r=nd.r, cx=nd.x, cy=nd.y;
+      const cands=[
+        {x:cx+r+5, y:cy, a:"start",  box:{x1:cx+r+5,y1:cy-h/2,x2:cx+r+5+w,y2:cy+h/2}},
+        {x:cx-r-5, y:cy, a:"end",    box:{x1:cx-r-5-w,y1:cy-h/2,x2:cx-r-5,y2:cy+h/2}},
+        {x:cx, y:cy-r-9, a:"middle", box:{x1:cx-w/2,y1:cy-r-16,x2:cx+w/2,y2:cy-r-2}},
+        {x:cx, y:cy+r+10,a:"middle", box:{x1:cx-w/2,y1:cy+r+3,x2:cx+w/2,y2:cy+r+17}}
+      ];
+      let ch=null;
+      for(const c of cands){
+        if(c.box.x1<mL+2 || c.box.x2>mL+plotW-2) continue;
+        if(nodeBoxes.some(b=>rectsOverlap(c.box,b))) continue;
+        if(placedL.some(b=>rectsOverlap(c.box,b))) continue;
+        ch=c; break;
+      }
+      if(!ch) ch=cands[0];
+      placedL.push(ch.box);
+      const t=el("text",{x:ch.x,y:ch.y,"text-anchor":ch.a},nd.g);
+      t.textContent=nd.d.s;
+    });
+  }
+  renderLegend();
+}
+
+function renderLegend(){
+  const lg=document.getElementById("legend");
+  const counts={hedge:0,spec:0,ponzi:0};
+  DATA.forEach(d=>counts[d.b]++);
+  lg.innerHTML="";
+  const mk=(html)=>{const s=document.createElement("div");s.className="it";s.innerHTML=html;return s;};
+  ["ponzi","spec","hedge"].forEach(b=>{
+    lg.appendChild(mk(`<span class="sw" style="background:${BANDCOLOR[b]}"></span>${BANDNAME[b]}融资 <span class="count">${counts[b]}</span>`));
+  });
+  lg.appendChild(mk(`<span class="ring"></span>机制 · 政策（非借款人头寸）`));
+  const skName = state.sdim==="lv"?"杠杆": state.sdim==="frag"?"脆弱度":"一致";
+  if(state.sdim!=="fix"){
+    lg.appendChild(mk(`<span class="size-key"><span class="c" style="width:10px;height:10px"></span><span class="c" style="width:18px;height:18px"></span></span>节点大小 = ${skName}`));
+  }
+}
+
+function renderTable(){
+  const thead=document.querySelector("#tbl thead");
+  const tbody=document.querySelector("#tbl tbody");
+  const cols=[["rank","#",""],["n","场景",""],["L","层",""],
+    ["c","抵押品","num"],["lv","杠杆","num"],["rf","反身性","num"],["f","脆弱度","num"],["b","明斯基带",""]];
+  thead.innerHTML="";
+  const tr=document.createElement("tr");
+  cols.forEach(([key,label,cls])=>{
+    const th=document.createElement("th");
+    if(cls) th.className=cls;
+    th.textContent=label;
+    if(["c","lv","rf","f"].includes(key)){
+      th.innerHTML=label+' <span class="ar">↕</span>';
+      th.addEventListener("click",()=>{ if(state.sortKey===key){state.sortDir*=-1;} else {state.sortKey=key; state.sortDir=-1;} renderTable(); });
+    }
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+
+  let rows=[...DATA].sort((a,b)=> (a[state.sortKey]-b[state.sortKey])*state.sortDir);
+  tbody.innerHTML="";
+  rows.forEach((d,i)=>{
+    const r=document.createElement("tr");
+    r.className="row"+(state.sel===d?" sel":"");
+    r.innerHTML=`<td class="rank">${i+1}</td>
+      <td>${d.n}${d.k==="m"?' <span class="lname">· 机制</span>':''}</td>
+      <td class="lname">${d.L}</td>
+      <td class="num">${d.c}</td><td class="num">${d.lv}</td><td class="num">${d.rf}</td>
+      <td class="num" style="font-weight:700">${d.f.toFixed(2)}</td>
+      <td><span class="bandtag" style="background:${BANDCOLOR[d.b]}"></span>${BANDNAME[d.b]}</td>`;
+    r.addEventListener("click",()=>select(d));
+    tbody.appendChild(r);
+  });
+}
+
+function select(d){
+  state.sel=d;
+  const box=document.getElementById("detail");
+  const bars=[["抵押品强度",d.c,"var(--teal)"],["杠杆",d.lv,"var(--coral)"],["反身性",d.rf,"var(--amber)"]];
+  box.innerHTML=`
+    <div class="dt-head">
+      <span class="dt-name">${d.n}</span>
+      <span class="lchip" style="background:${LCOLOR[d.L]}">${d.L}</span>
+      <span class="kind">${d.k==="m"?"机制 · 政策":"杠杆头寸"}</span>
+    </div>
+    <div class="dt-body">
+      <div class="scores">
+        ${bars.map(([l,v,c])=>`<div class="srow"><span class="sl">${l}</span>
+          <span class="bar"><i style="width:${v/5*100}%;background:${c}"></i></span>
+          <span class="sv">${v}</span></div>`).join("")}
+        <div class="frag-box">
+          <div class="frag-row">
+            <span class="frag-num" style="color:${BANDCOLOR[d.b]}">${d.f.toFixed(2)}</span>
+            <span class="frag-band" style="background:${BANDCOLOR[d.b]}">${BANDNAME[d.b]}融资</span>
+          </div>
+          <div class="frag-cap">脆弱度 = (杠杆 ${d.lv} + 反身性 ${d.rf} + (6 − 抵押品 ${d.c})) / 3</div>
+        </div>
+      </div>
+      <div class="note">${d.note}
+        <div class="axes">${d.k==="m"?"※ 该项为机制／政策，纵轴位置表示其内含的扩张／顺周期属性，非借款人脆弱度。":"※ 坐标刻画结构脆弱度；最终明斯基归类仍取决于现金流能否覆盖本息。"}</div>
+      </div>
+    </div>`;
+  if(state.view==="plot") renderPlot(); else renderTable();
+  if(window.innerWidth<860){ box.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+}
+
+// ---- controls ----
+function segHandler(id,key,after){
+  document.getElementById(id).addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    [...e.currentTarget.children].forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); state[key]=b.dataset.v; after&&after();
+  });
+}
+segHandler("ydim","ydim",renderPlot);
+segHandler("sdim","sdim",renderPlot);
+segHandler("view","view",()=>{
+  const plot=state.view==="plot";
+  document.getElementById("plotView").classList.toggle("hidden",!plot);
+  document.getElementById("tableView").classList.toggle("hidden",plot);
+  plot?renderPlot():renderTable();
+});
+document.getElementById("lblToggle").addEventListener("change",e=>{
+  state.labels=e.target.checked; renderPlot();
+});
+
+// layer chips
+const lc=document.getElementById("layers");
+LAYERS.forEach(L=>{
+  const b=document.createElement("button"); b.className="chip";
+  b.innerHTML=`<span class="d" style="background:${LCOLOR[L]}"></span>${L}`;
+  b.addEventListener("click",()=>{
+    if(state.active.has(L)) state.active.delete(L); else state.active.add(L);
+    if(state.active.size===0) state.active.add(L); // keep at least one
+    b.classList.toggle("off",!state.active.has(L));
+    renderPlot();
+  });
+  lc.appendChild(b);
+});
+
+renderPlot();
+renderTable();
+</script>
+</body>
+</html>
